@@ -995,12 +995,46 @@ async function sendOrderToTelegram(order) {
         setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
       }
 
-      function submit(e) {
-        e.preventDefault();
-        if (!items.length) return;
-        setSubmitted(true);
-        clearCart();
-      }
+     async function submit(e) {
+  e.preventDefault();
+
+  if (!items.length) return;
+
+  const order = {
+    customer: {
+      name: form.name,
+      phone: form.phone,
+      email: form.email,
+      city: form.city,
+      delivery: form.delivery,
+      payment: form.payment,
+      comment: form.comment
+    },
+    items: items.map(({ product, qty }) => ({
+      id: product.id,
+      sku: product.sku,
+      name: product.name,
+      price: product.price,
+      qty
+    })),
+    total: cartTotal,
+    createdAt: new Date().toLocaleString('uk-UA', {
+      timeZone: 'Europe/Kyiv'
+    })
+  };
+
+  try {
+    await sendOrderToTelegram(order);
+    setSubmitted(true);
+    clearCart();
+  } catch (error) {
+    console.error('Telegram order send error:', error);
+
+    alert(
+      'Замовлення сформовано, але повідомлення в Telegram не відправилось. Перевірте налаштування TELEGRAM_BOT_TOKEN на сервері.'
+    );
+  }
+}
 
       if (submitted) {
         return (
